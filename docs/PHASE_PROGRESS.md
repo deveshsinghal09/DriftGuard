@@ -41,3 +41,13 @@ Phase 0 delivers the backend baseline. Live room work requires a Switch server, 
 `npm run build`, `npm run typecheck`, and `npm test` passed locally with 39 tests. Checkpoints were reviewed with `git diff --cached --check` and verified on the pushed feature branch with `git ls-remote`.
 
 Docker was unavailable, and automatic approval review rejected the Docker Desktop download-and-install command as blocked by policy. The native server came up without it. To finish the live check, bring up a supported Docker engine, connect Mattermost and link the owner's account, run the room template, and retry the Codex provider from Console. See [Switch setup](SWITCH_SETUP.md) for the three prompts and verification steps.
+
+## Phase 2 — GitHub repositories, issues, and engineering tasks
+
+- Added a GitHub CLI-authenticated REST adapter, an owned-repository allowlist with separate read and write grants, manual issue sync, and persistent issue-backed engineering tasks. Added the operator CLI and scoped loopback issue-review endpoints for Guardian. [GitHub workflow](GITHUB_WORKFLOW.md)
+- Verified the effective GitHub login `deveshsinghal09` and OAuth scopes `gist`, `read:org`, `repo`, and `workflow`. Registered the public DriftGuard repository (ID `1447937430`) for read access. The local write flag is off. [DriftGuard on GitHub](https://github.com/deveshsinghal09/DriftGuard)
+- `gh api` search found zero open issues owned by the account before validation. Filed the genuine missing owner-revocation feature through `gh issue create`, then synced it through the production adapter. The CLI returned one open issue (GitHub ID `6239128929`) and zero changed rows on repeat sync. [DriftGuard issue #2](https://github.com/deveshsinghal09/DriftGuard/issues/2)
+- Created one `DISCOVERED` task from issue #2. Repeated task creation and separate CLI processes reopening SQLite returned the same task. The loopback Guardian API also synced and retrieved the issue and returned that task. Requests without credentials or with the Builder role were rejected.
+- `npm ci`, `npm run build`, `npm run typecheck`, and `npm test` passed locally with 55 tests. Coverage includes authentication failure, repository scope, pagination, issue and comment edits, duplicate prevention, network recovery, untrusted text, and SQLite persistence. Used `git diff --cached --check`, `git push`, and `git ls-remote` to review and verify the checkpoints on `codex/phase-2-github`.
+
+Issue sync is manual. The real GitHub and loopback API checks ran locally. Guardian's new issue-review instructions have not run in a live Switch room, where Phase 1's provider and room verification is still pending.

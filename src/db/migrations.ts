@@ -79,6 +79,31 @@ const migrations = [
       ) STRICT;
     `,
   },
+  {
+    version: 5,
+    name: 'track_engineering_tasks_from_issues',
+    sql: `
+      CREATE TABLE engineering_tasks (
+        id TEXT PRIMARY KEY,
+        repository_id INTEGER NOT NULL,
+        github_issue_id INTEGER NOT NULL,
+        github_issue_number INTEGER NOT NULL,
+        source_url TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL CHECK (status IN (
+          'DISCOVERED', 'NEEDS_CLARIFICATION', 'AWAITING_APPROVAL', 'READY', 'IN_PROGRESS',
+          'IN_REVIEW', 'VERIFIED', 'BLOCKED', 'COMPLETED', 'FAILED'
+        )),
+        assigned_agent TEXT,
+        decision_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE (repository_id, github_issue_id),
+        FOREIGN KEY (repository_id, github_issue_id) REFERENCES github_issues(repository_id, github_issue_id)
+      ) STRICT;
+    `,
+  },
 ];
 
 type MigrationRecord = { version: number; name: string };

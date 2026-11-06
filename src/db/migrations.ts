@@ -8,6 +8,35 @@ const migrations = [
     name: 'identify_driftguard_database',
     sql: `PRAGMA application_id = ${applicationId}`,
   },
+  {
+    version: 2,
+    name: 'store_workflow_tasks_and_handoffs',
+    sql: `
+      CREATE TABLE workflow_tasks (
+        task_id TEXT PRIMARY KEY,
+        decision_id TEXT NOT NULL UNIQUE,
+        revision INTEGER NOT NULL CHECK (revision > 0),
+        repository TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        evidence_references TEXT NOT NULL CHECK (json_valid(evidence_references)),
+        status TEXT NOT NULL CHECK (status IN (
+          'proposed', 'assigned', 'ready_for_verification', 'verified', 'changes_requested'
+        )),
+        candidate_sha TEXT,
+        CHECK ((status IN ('proposed', 'assigned')) = (candidate_sha IS NULL))
+      ) STRICT;
+
+      CREATE TABLE workflow_handoffs (
+        correlation_id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL REFERENCES workflow_tasks(task_id),
+        revision INTEGER NOT NULL CHECK (revision > 0),
+        action TEXT NOT NULL,
+        request_hash TEXT NOT NULL,
+        envelope TEXT NOT NULL CHECK (json_valid(envelope)),
+        UNIQUE (task_id, revision, action)
+      ) STRICT;
+    `,
+  },
 ];
 
 type MigrationRecord = { version: number; name: string };

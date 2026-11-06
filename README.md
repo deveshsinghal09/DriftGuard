@@ -1,6 +1,6 @@
 # DriftGuard
 
-An AI engineering team that catches conflicting requirements and ships verified GitHub pull requests through Switch. Phase 0 provides the backend and documents the planned Switch and GitHub workflow.
+An AI engineering team that catches conflicting requirements and ships verified GitHub pull requests through Switch. The backend records tasks, human assignments, and independently verified candidates. Switch carries the engineering conversation and agent handoffs.
 
 ## Run the backend
 
@@ -45,5 +45,8 @@ The integration tests start Fastify on an ephemeral loopback port and use a temp
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Switch research](docs/SWITCH_RESEARCH.md)
+- [Switch setup](docs/SWITCH_SETUP.md)
+- [Agent roles and permissions](docs/AGENT_ROLES.md)
+- [Agent handoff protocol](docs/AGENT_PROTOCOL.md)
 - [GitHub workflow](docs/GITHUB_WORKFLOW.md)
 - [Phase progress](docs/PHASE_PROGRESS.md)

@@ -1,10 +1,11 @@
 import pino from 'pino';
 import { loadEnvironment } from '../config/env.js';
+import { configureWorkflow } from '../security/workflow-auth.js';
 import { buildApp } from './build-app.js';
 
 async function main() {
   const env = loadEnvironment();
-  const app = buildApp(env);
+  const app = buildApp(env, configureWorkflow(process.env, env.HOST));
   let closing: Promise<void> | undefined;
 
   function shutdown(signal: NodeJS.Signals) {

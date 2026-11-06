@@ -1,6 +1,6 @@
 # DriftGuard architecture
 
-Phase 0 implements the Fastify API, validated configuration, structured logs, and SQLite migrations. The Switch and GitHub engineering workflow below describes the intended boundaries for later phases.
+Phase 0 implements the Fastify API, validated configuration, structured logs, and SQLite migrations. Phase 1 adds persistent task identities, human assignment, role-specific access, and Switch handoff payloads. Switch room delivery and GitHub publication are separate from the local authorization record. See [phase progress](PHASE_PROGRESS.md) for verified runtime behavior.
 
 ```mermaid
 flowchart LR

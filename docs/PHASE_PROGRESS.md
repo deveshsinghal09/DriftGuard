@@ -27,3 +27,17 @@ Environment inspection used `Get-CimInstance`, `Get-Location`, `Get-Command`, an
 `codex mcp add switch-docs --url https://docs.switchagents.ai/mcp` and `codex mcp list` succeeded. A direct MCP handshake, tool listing, and `search_switch_ai` call succeeded, and the official documentation pages were read over HTTPS. The existing Codex chat requires a reload or fresh local session to expose the new tools. See [Switch research](SWITCH_RESEARCH.md) for the verified contract and sources.
 
 Phase 0 delivers the backend baseline. Live room work requires a Switch server, an authorized room, and a configured Codex-backed agent. The next phase begins when requested.
+
+## Phase 1 — Switch agents and handoffs
+
+**Live engineering room verification is pending.** The local Switch 0.31.0 server started and returned HTTP 200 from `/health`. Switch Console 0.40.1 listed `driftguard-guardian`, `driftguard-builder`, and `driftguard-verifier` as running Codex-backed agents on this computer. The Switch controller confirmed all three agents attached to its event stream.
+
+- Downloaded the official Windows x64 MSI, checked its SHA-256 against the GitHub release, verified the SandboxAQ Authenticode signature, and installed it with `msiexec`. Console found Codex signed in. [Switch Console release](https://github.com/sandbox-quantum/switch/releases/tag/switch-console-v0.40.1)
+- `codex mcp get switch-docs` confirmed the registration. A direct MCP session listed tools and called `search_switch_ai` for server setup, Codex providers, agent instructions, addressing, identity, and templates. The running Codex chat still reported the server as unknown in its tool inventory.
+- Created the three role profiles and the private `driftguard-engineering` template. The Switch server's bundled `lint_template` validator returned zero errors and warnings. The room was left uncreated because Console reported no connected messaging app.
+- Sent the three role questions from [Switch setup](SWITCH_SETUP.md) as separate real Console direct messages. Switch queued each message for its intended agent. Each session failed to answer with `Provider request initialize timed out` from the Switch Codex app-server host. Standalone Codex JSON-RPC initialization succeeded from the same Windows account.
+- Added loopback-only role authentication, SQLite task and handoff records, owner assignment, repository allowlisting, and candidate SHA verification. The API emits arguments for Switch's actual `send_targeted_message` tool. Tests cover invalid identities and references, cross-role denials, serialization, replay, and persistence across restart. [Agent protocol](AGENT_PROTOCOL.md) · [Role boundaries](AGENT_ROLES.md)
+
+`npm run build`, `npm run typecheck`, and `npm test` passed locally with 39 tests. Checkpoints were reviewed with `git diff --cached --check` and verified on the pushed feature branch with `git ls-remote`.
+
+Docker was unavailable, and automatic approval review rejected the Docker Desktop download-and-install command as blocked by policy. The native server came up without it. To finish the live check, bring up a supported Docker engine, connect Mattermost and link the owner's account, run the room template, and retry the Codex provider from Console. See [Switch setup](SWITCH_SETUP.md) for the three prompts and verification steps.

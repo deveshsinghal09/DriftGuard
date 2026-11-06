@@ -4,11 +4,15 @@
   "private": true,
   "description": "An AI engineering team that catches conflicting requirements and ships verified GitHub pull requests through Switch.",
   "type": "module",
+  "bin": {
+    "driftguard": "dist/cli/index.js"
+  },
   "engines": {
     "node": "^22.12.0 || ^24.0.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "driftguard": "node --enable-source-maps dist/cli/index.js",
     "start": "node --enable-source-maps dist/app/start.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

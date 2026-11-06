@@ -37,6 +37,28 @@ const migrations = [
       ) STRICT;
     `,
   },
+  {
+    version: 3,
+    name: 'register_github_repositories',
+    sql: `
+      CREATE TABLE github_repositories (
+        repository_id INTEGER PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        owner TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        default_branch TEXT NOT NULL,
+        visibility TEXT NOT NULL CHECK (visibility IN ('public', 'private', 'internal')),
+        permission_level TEXT NOT NULL,
+        read_enabled INTEGER NOT NULL CHECK (read_enabled IN (0, 1)),
+        write_enabled INTEGER NOT NULL CHECK (write_enabled IN (0, 1)),
+        active INTEGER NOT NULL CHECK (active IN (0, 1)),
+        added_at TEXT NOT NULL,
+        sync_version INTEGER NOT NULL DEFAULT 0,
+        CHECK (write_enabled = 0 OR (read_enabled = 1 AND active = 1))
+      ) STRICT;
+    `,
+  },
 ];
 
 type MigrationRecord = { version: number; name: string };

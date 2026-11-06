@@ -1,0 +1,22 @@
+{
+  "name": "driftguard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An AI engineering team that catches conflicting requirements and ships verified GitHub pull requests through Switch.",
+  "type": "module",
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^6.0.3"
+  }
+}

@@ -3,7 +3,9 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyRequest } from 'fastify';
 import pino from 'pino';
 import { sendHttpError } from '../api/errors.js';
+import { registerHealthRoute } from '../api/routes/health.js';
 import type { Environment } from '../config/env.js';
+import { openDatabase } from '../db/database.js';
 
 export function buildApp(env: Environment) {
   const app = Fastify({
@@ -39,6 +41,12 @@ export function buildApp(env: Environment) {
     });
     app.register(cors, { origin: env.CORS_ORIGINS, methods: ['GET', 'HEAD'] });
   }
+
+  app.register(async (api) => {
+    const db = openDatabase(env.DATABASE_PATH);
+    api.addHook('onClose', async () => db.close());
+    registerHealthRoute(api, db);
+  });
 
   return app;
 }

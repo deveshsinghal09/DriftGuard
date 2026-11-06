@@ -67,8 +67,8 @@ function retryAt(headers: Headers): string {
 
 export function githubRequest(token: string, send: typeof fetch = fetch): GitHubRequest {
   return async (path) => {
-    const url = new URL(path, githubOrigin);
-    if (!path.startsWith('/') || url.origin !== githubOrigin || url.username || url.password || url.hash) {
+    const url = URL.parse(path, githubOrigin);
+    if (!url || !path.startsWith('/') || url.origin !== githubOrigin || url.username || url.password || url.hash) {
       throw new GitHubError('INVALID_ARGUMENT', 'Invalid GitHub API path');
     }
     let response: Response;

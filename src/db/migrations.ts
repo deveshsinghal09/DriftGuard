@@ -59,6 +59,26 @@ const migrations = [
       ) STRICT;
     `,
   },
+  {
+    version: 4,
+    name: 'persist_github_issue_snapshots',
+    sql: `
+      CREATE TABLE github_issues (
+        repository_id INTEGER NOT NULL REFERENCES github_repositories(repository_id),
+        github_issue_id INTEGER NOT NULL,
+        issue_number INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT,
+        url TEXT NOT NULL,
+        author TEXT,
+        updated_at TEXT NOT NULL,
+        sync_state TEXT NOT NULL CHECK (sync_state IN ('OPEN', 'CLOSED', 'UNAVAILABLE')),
+        details TEXT NOT NULL CHECK (json_valid(details)),
+        PRIMARY KEY (repository_id, github_issue_id),
+        UNIQUE (repository_id, issue_number)
+      ) STRICT;
+    `,
+  },
 ];
 
 type MigrationRecord = { version: number; name: string };

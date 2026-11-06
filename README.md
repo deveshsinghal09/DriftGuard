@@ -32,6 +32,10 @@ Copy `.env.example` to `.env` to override defaults. Process environment variable
 
 The server applies SQLite migrations before it starts listening. Stop it with Ctrl+C so Fastify can drain requests and close SQLite.
 
+## Review GitHub issues
+
+With GitHub CLI authenticated, register an owned repository for reading, sync its issues into SQLite, and create a local task from a real issue. The same issue review operations are available to Guardian through the authenticated loopback API. [CLI and API reference](docs/GITHUB_WORKFLOW.md#repositories-operated-on-by-driftguard)
+
 ## Check changes
 
 ```sh

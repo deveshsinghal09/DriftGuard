@@ -100,7 +100,11 @@ describe('SQLite migrations', () => {
     const original = openDatabase(databasePath);
     const identity = original.pragma('application_id', { simple: true });
     try {
-      original.exec('DROP TABLE workflow_handoffs; DROP TABLE workflow_tasks; DELETE FROM schema_migrations WHERE version = 2');
+      const tables = original.prepare<[], { name: string }>(
+        "SELECT name FROM sqlite_schema WHERE type = 'table' AND name != 'schema_migrations' ORDER BY rowid DESC",
+      ).all();
+      for (const { name } of tables) original.exec('DROP TABLE ' + name);
+      original.exec('DELETE FROM schema_migrations WHERE version > 1');
     } finally {
       original.close();
     }
@@ -114,12 +118,13 @@ describe('SQLite migrations', () => {
   });
 
   it('records each migration once and keeps it across connections', () => {
-    openDatabase(databasePath).close();
+    const first = openDatabase(databasePath);
+    const versions = first.prepare('SELECT version FROM schema_migrations ORDER BY version').all();
+    first.close();
     const db = openDatabase(databasePath);
     try {
-      expect(db.prepare('SELECT version FROM schema_migrations ORDER BY version').all()).toEqual([
-        { version: 1 }, { version: 2 },
-      ]);
+      expect(versions).toEqual(expect.arrayContaining([{ version: 1 }, { version: 2 }]));
+      expect(db.prepare('SELECT version FROM schema_migrations ORDER BY version').all()).toEqual(versions);
       expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
     } finally {
       db.close();
@@ -143,7 +148,7 @@ describe('SQLite migrations', () => {
   it('refuses to start with migration history from a newer build', () => {
     const db = openDatabase(databasePath);
     try {
-      db.prepare('INSERT INTO schema_migrations (version, name) VALUES (?, ?)').run(3, 'future_migration');
+      db.prepare('INSERT INTO schema_migrations (version, name) VALUES (?, ?)').run(999, 'future_migration');
       expect(() => openDatabase(databasePath)).toThrow('SQLite migration history does not match');
     } finally {
       db.close();

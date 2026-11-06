@@ -24,7 +24,11 @@ function requireRole(actor: WorkflowRole, expected: WorkflowRole): void {
 }
 
 export class WorkflowService {
-  constructor(private readonly db: Database, readonly allowedRepositories: ReadonlySet<string>) {}
+  constructor(private readonly db: Database, private readonly allowedRepositories: ReadonlySet<string>) {}
+
+  repositoriesForBuild(): string[] {
+    return [...this.allowedRepositories].filter((repository) => this.repositoryAllowed(repository));
+  }
 
   readTask(taskId: string): Task {
     const row = this.db.prepare<[string], StoredTask>(`
@@ -149,7 +153,15 @@ export class WorkflowService {
   }
 
   private requireAllowlisted(repository: string): void {
-    if (!this.allowedRepositories.has(repository)) throw new WorkflowError(403);
+    if (!this.repositoryAllowed(repository)) throw new WorkflowError(403);
+  }
+
+  private repositoryAllowed(repository: string): boolean {
+    if (!this.allowedRepositories.has(repository)) return false;
+    const blocked = this.db.prepare(`
+      SELECT 1 FROM github_repositories WHERE slug = ? AND (active = 0 OR write_enabled = 0)
+    `).get(repository);
+    return !blocked;
   }
 
   private findHandoff(correlationId: string): StoredHandoff | undefined {

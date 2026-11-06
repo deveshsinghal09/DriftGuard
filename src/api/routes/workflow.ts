@@ -1,13 +1,13 @@
 import type { Database } from 'better-sqlite3';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import {
   agentNames, evidenceReferencesSchema, handoffRequestSchema, taskVersionSchema, type HandoffEnvelope,
 } from '../../domain/handoff.js';
 import { switchHandoffArguments } from '../../integrations/switch/handoff.js';
-import { repositorySchema, type WorkflowConfig, type WorkflowRole } from '../../security/workflow-auth.js';
+import { repositorySchema, type WorkflowConfig } from '../../security/workflow-auth.js';
 import { WorkflowError, WorkflowService } from '../../services/workflow.js';
-import { sendHttpError } from '../errors.js';
+import { workflowAuthentication } from '../workflow-handler.js';
 
 const proposalSchema = z.strictObject({
   repository: repositorySchema,
@@ -29,24 +29,14 @@ function switchPayload(envelope: HandoffEnvelope) {
   return { envelope, switchArguments: switchHandoffArguments(envelope) };
 }
 
-type WorkflowHandler = (actor: WorkflowRole, request: FastifyRequest, reply: FastifyReply) => unknown;
-
 export function registerWorkflowRoutes(app: FastifyInstance, db: Database, config: WorkflowConfig): void {
   const workflow = new WorkflowService(db, config.allowedRepositories);
-  const authenticated = (handler: WorkflowHandler) => async (request: FastifyRequest, reply: FastifyReply) => {
-    reply.header('cache-control', 'no-store');
-    const actor = config.authenticate(request.headers.authorization);
-    if (!actor) {
-      reply.header('www-authenticate', 'Bearer');
-      return sendHttpError(request, reply, 401);
-    }
-    return handler(actor, request, reply);
-  };
+  const authenticated = workflowAuthentication(config);
 
   app.get('/api/v1/agents/me', authenticated((actor) => ({
     role: actor,
     agentName: actor === 'owner' ? null : agentNames[actor],
-    repositoryAllowlist: actor === 'builder' || actor === 'owner' ? [...workflow.allowedRepositories] : [],
+    repositoryAllowlist: actor === 'builder' || actor === 'owner' ? workflow.repositoriesForBuild() : [],
   })));
   app.get('/api/v1/tasks/:taskId', authenticated((_actor, request) => {
     return workflow.readTask(parseInput(taskPathSchema, request.params).taskId);

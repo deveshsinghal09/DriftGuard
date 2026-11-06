@@ -37,6 +37,73 @@ const migrations = [
       ) STRICT;
     `,
   },
+  {
+    version: 3,
+    name: 'register_github_repositories',
+    sql: `
+      CREATE TABLE github_repositories (
+        repository_id INTEGER PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        owner TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        default_branch TEXT NOT NULL,
+        visibility TEXT NOT NULL CHECK (visibility IN ('public', 'private', 'internal')),
+        permission_level TEXT NOT NULL,
+        read_enabled INTEGER NOT NULL CHECK (read_enabled IN (0, 1)),
+        write_enabled INTEGER NOT NULL CHECK (write_enabled IN (0, 1)),
+        active INTEGER NOT NULL CHECK (active IN (0, 1)),
+        added_at TEXT NOT NULL,
+        sync_version INTEGER NOT NULL DEFAULT 0,
+        CHECK (write_enabled = 0 OR (read_enabled = 1 AND active = 1))
+      ) STRICT;
+    `,
+  },
+  {
+    version: 4,
+    name: 'persist_github_issue_snapshots',
+    sql: `
+      CREATE TABLE github_issues (
+        repository_id INTEGER NOT NULL REFERENCES github_repositories(repository_id),
+        github_issue_id INTEGER NOT NULL,
+        issue_number INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT,
+        url TEXT NOT NULL,
+        author TEXT,
+        updated_at TEXT NOT NULL,
+        sync_state TEXT NOT NULL CHECK (sync_state IN ('OPEN', 'CLOSED', 'UNAVAILABLE')),
+        details TEXT NOT NULL CHECK (json_valid(details)),
+        PRIMARY KEY (repository_id, github_issue_id),
+        UNIQUE (repository_id, issue_number)
+      ) STRICT;
+    `,
+  },
+  {
+    version: 5,
+    name: 'track_engineering_tasks_from_issues',
+    sql: `
+      CREATE TABLE engineering_tasks (
+        id TEXT PRIMARY KEY,
+        repository_id INTEGER NOT NULL,
+        github_issue_id INTEGER NOT NULL,
+        github_issue_number INTEGER NOT NULL,
+        source_url TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        status TEXT NOT NULL CHECK (status IN (
+          'DISCOVERED', 'NEEDS_CLARIFICATION', 'AWAITING_APPROVAL', 'READY', 'IN_PROGRESS',
+          'IN_REVIEW', 'VERIFIED', 'BLOCKED', 'COMPLETED', 'FAILED'
+        )),
+        assigned_agent TEXT,
+        decision_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE (repository_id, github_issue_id),
+        FOREIGN KEY (repository_id, github_issue_id) REFERENCES github_issues(repository_id, github_issue_id)
+      ) STRICT;
+    `,
+  },
 ];
 
 type MigrationRecord = { version: number; name: string };

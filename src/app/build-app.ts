@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyRequest } from 'fastify';
 import pino from 'pino';
 import { sendHttpError } from '../api/errors.js';
+import { registerGitHubRoutes } from '../api/routes/github.js';
 import { registerHealthRoute } from '../api/routes/health.js';
 import { registerWorkflowRoutes } from '../api/routes/workflow.js';
 import type { Environment } from '../config/env.js';
@@ -48,7 +49,10 @@ export function buildApp(env: Environment, workflow?: WorkflowConfig) {
     const db = openDatabase(env.DATABASE_PATH);
     api.addHook('onClose', async () => db.close());
     registerHealthRoute(api, db);
-    if (workflow) registerWorkflowRoutes(api, db, workflow);
+    if (workflow) {
+      registerWorkflowRoutes(api, db, workflow);
+      registerGitHubRoutes(api, db, workflow);
+    }
   });
 
   return app;

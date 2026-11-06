@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { handoffEnvelopeSchema, handoffRequestSchema, type HandoffEnvelope } from '../../src/domain/handoff.js';
-import { serializeHandoff } from '../../src/integrations/switch/handoff.js';
+import { serializeHandoff, switchHandoffArguments } from '../../src/integrations/switch/handoff.js';
 
 const envelope: HandoffEnvelope = {
   taskId: randomUUID(),
@@ -20,6 +20,14 @@ const envelope: HandoffEnvelope = {
 describe('Switch handoff serialization', () => {
   it('round-trips the complete envelope as JSON message text', () => {
     expect(handoffEnvelopeSchema.parse(JSON.parse(serializeHandoff(envelope)))).toEqual(envelope);
+  });
+
+  it('addresses only the intended Switch agent even when evidence contains mentions', () => {
+    const withMention = { ...envelope, evidenceReferences: ['switch:message-about-@everyone'] };
+    const args = switchHandoffArguments(withMention);
+    expect(args.target_names).toEqual(['driftguard-verifier']);
+    expect(args.body).not.toContain('@');
+    expect(JSON.parse(args.body)).toEqual(withMention);
   });
 
   it.each([

@@ -38,7 +38,7 @@ Ask the human owner to clarify access, approve the current revision, or review t
 
 ## Handoff procedure
 
-Record `request_verification` through DriftGuard with the actual candidate SHA and evidence. Send the returned envelope to `driftguard-verifier` using `send_targeted_message` in the Switch room. Reuse the same correlation ID only for a retry of that handoff.
+Confirm the addressed Guardian handoff with `GET /api/v1/handoffs/{correlationId}` and include that correlation ID in the build-access request. Record `request_verification` with the actual candidate SHA and evidence. Pass the returned `switchArguments` to Switch's `send_targeted_message` in the engineering room. Reuse the same correlation ID only for a retry of that handoff.
 
 ## Evidence requirements
 

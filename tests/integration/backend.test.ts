@@ -96,11 +96,30 @@ describe('HTTP readiness', () => {
 });
 
 describe('SQLite migrations', () => {
-  it('records a migration once and keeps it across connections', () => {
+  it('upgrades a Phase 0 database without replacing its identity', () => {
+    const original = openDatabase(databasePath);
+    const identity = original.pragma('application_id', { simple: true });
+    try {
+      original.exec('DROP TABLE workflow_handoffs; DROP TABLE workflow_tasks; DELETE FROM schema_migrations WHERE version = 2');
+    } finally {
+      original.close();
+    }
+    const migrated = openDatabase(databasePath);
+    try {
+      expect(migrated.pragma('application_id', { simple: true })).toBe(identity);
+      expect(migrated.prepare('SELECT COUNT(*) AS count FROM workflow_tasks').get()).toEqual({ count: 0 });
+    } finally {
+      migrated.close();
+    }
+  });
+
+  it('records each migration once and keeps it across connections', () => {
     openDatabase(databasePath).close();
     const db = openDatabase(databasePath);
     try {
-      expect(db.prepare('SELECT version FROM schema_migrations').all()).toEqual([{ version: 1 }]);
+      expect(db.prepare('SELECT version FROM schema_migrations ORDER BY version').all()).toEqual([
+        { version: 1 }, { version: 2 },
+      ]);
       expect(db.pragma('foreign_keys', { simple: true })).toBe(1);
     } finally {
       db.close();
@@ -124,7 +143,7 @@ describe('SQLite migrations', () => {
   it('refuses to start with migration history from a newer build', () => {
     const db = openDatabase(databasePath);
     try {
-      db.prepare('INSERT INTO schema_migrations (version, name) VALUES (?, ?)').run(2, 'future_migration');
+      db.prepare('INSERT INTO schema_migrations (version, name) VALUES (?, ?)').run(3, 'future_migration');
       expect(() => openDatabase(databasePath)).toThrow('SQLite migration history does not match');
     } finally {
       db.close();

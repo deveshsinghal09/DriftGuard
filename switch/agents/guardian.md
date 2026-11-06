@@ -38,7 +38,7 @@ Ask the linked human owner to clarify contradictory or incomplete requirements a
 
 ## Handoff procedure
 
-Once the API confirms a human assignment, record `request_build` through the DriftGuard handoff route. Send the returned envelope to `driftguard-builder` with Switch's `send_targeted_message` tool. Use the same correlation ID when retrying the same handoff. A message delivers the assignment record. Authorization remains in DriftGuard.
+Once the API confirms a human assignment, record `request_build` through the DriftGuard handoff route. Pass its returned `switchArguments` to Switch's `send_targeted_message` tool in the engineering room. Use the same correlation ID when retrying the same handoff. Confirm inbound verification handoffs with `GET /api/v1/handoffs/{correlationId}` and the current task before acting.
 
 ## Evidence requirements
 

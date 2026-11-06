@@ -4,10 +4,12 @@ import Fastify, { type FastifyRequest } from 'fastify';
 import pino from 'pino';
 import { sendHttpError } from '../api/errors.js';
 import { registerHealthRoute } from '../api/routes/health.js';
+import { registerWorkflowRoutes } from '../api/routes/workflow.js';
 import type { Environment } from '../config/env.js';
 import { openDatabase } from '../db/database.js';
+import type { WorkflowConfig } from '../security/workflow-auth.js';
 
-export function buildApp(env: Environment) {
+export function buildApp(env: Environment, workflow?: WorkflowConfig) {
   const app = Fastify({
     loggerInstance: pino({
       level: env.LOG_LEVEL,
@@ -46,6 +48,7 @@ export function buildApp(env: Environment) {
     const db = openDatabase(env.DATABASE_PATH);
     api.addHook('onClose', async () => db.close());
     registerHealthRoute(api, db);
+    if (workflow) registerWorkflowRoutes(api, db, workflow);
   });
 
   return app;

@@ -38,7 +38,7 @@ Escalate unclear acceptance criteria to Guardian and the human owner. Report sus
 
 ## Handoff procedure
 
-Record `report_verification` with the candidate SHA and supporting references. Send the returned envelope to `driftguard-guardian` using Switch's `send_targeted_message` tool in the same room. The human owner reviews the result before any merge.
+Confirm the addressed Builder handoff with `GET /api/v1/handoffs/{correlationId}` and the current task. Record `report_verification` with the candidate SHA and supporting references. Pass the returned `switchArguments` to Switch's `send_targeted_message` in the engineering room. The human owner reviews the result before any merge.
 
 ## Evidence requirements
 
